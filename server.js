@@ -16,7 +16,7 @@ import { MasqrMiddleware } from "./masqr.js";
 dotenv.config();
 ServerResponse.prototype.setMaxListeners(50);
 
-const port = 2345, server = createServer(), bare = createBareServer("/seal/");
+const port = Number(process.env.PORT || 2345), server = createServer(), bare = createBareServer("/seal/");
 server.on("upgrade", (req, sock, head) =>
   bare.shouldRoute(req) ? bare.routeUpgrade(req, sock, head)
   : req.url.endsWith("/wisp/") ? wisp.routeRequest(req, sock, head)
@@ -63,11 +63,18 @@ app.get("/return", async (req, reply) =>
         .then(r => r.json()).catch(()=>reply.code(500).send({error:"request failed"}))
     : reply.code(401).send({ error: "query parameter?" })
 );
-
+app.get("/ping", async () => {
+  return { ok: true };
+});
 app.setNotFoundHandler((req, reply) =>
   req.raw.method==="GET" && req.headers.accept?.includes("text/html")
     ? reply.sendFile("index.html")
     : reply.code(404).send({ error: "Not Found" })
 );
 
-app.listen({ port }).then(()=>console.log(`Server running on ${port}`));
+await app.listen({
+  port,
+  host: "0.0.0.0",
+});
+
+console.log(`Server running on ${port}`);
