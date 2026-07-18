@@ -492,9 +492,15 @@ window.addEventListener('load', async function () {
   const warn = (...args) =>
     console.warn('%c[WARN]%c', 'color: #fa0; font-weight: bold;', 'color: inherit;', ...args);
 
-  const ws =
-    JSON.parse(localStorage.getItem('options') || {}).wServer ||
-    `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}${CONFIG.ws}`;
+  const savedOptions = JSON.parse(
+    localStorage.getItem("options") || "{}"
+  );
+  
+  const configuredWs = /^wss?:\/\//i.test(CONFIG.ws)
+    ? CONFIG.ws
+    : `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}${CONFIG.ws}`;
+  
+  const ws = savedOptions.wServer || configuredWs;
 
   try {
     await connection.setTransport('/epoxy/index.mjs', [{ wisp: ws }]);
